@@ -48,8 +48,11 @@ class MigrationOut(BaseModel):
     repository_id: int
     target_provider: ProviderName
     status: str
+    attempts: int | None
+    target_url: str | None
     error_message: str | None
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+    

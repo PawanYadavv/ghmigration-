@@ -18,9 +18,10 @@ services:
     build: .
     ports:
       - "8001:8000"
+    env_file: .env  # GITHUB_TOKEN, GITLAB_TOKEN, GITLAB_URL
     environment:
+      # inside Docker the database host is "db" (service name), not localhost
       DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/scm_catalog
-      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     depends_on:
       db:
         condition: service_healthy

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, func, text
 
 from app.database import Base
 
@@ -27,6 +27,19 @@ class MigrationJob(Base):
     repository_id = Column(Integer, ForeignKey("repositories.id", ondelete="CASCADE"), nullable=False)
     target_provider = Column(String(50), nullable=False)
     status = Column(String(20), default="pending")  # pending / in_progress / completed / failed
+    attempts = Column(Integer, default=0)  # how many times the worker tried
+    target_url = Column(String(500))  # link to the migrated repo (e.g. on GitLab)
     error_message = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # only ONE pending/in_progress job per repo -> database itself blocks duplicate migrations
+    __table_args__ = (
+        Index(
+            "uq_one_active_migration_per_repo",
+            "repository_id",
+            unique=True,
+            postgresql_where=text("status IN ('pending', 'in_progress')"),
+            sqlite_where=text("status IN ('pending', 'in_progress')"),
+        ),
+    )
